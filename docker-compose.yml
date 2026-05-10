@@ -1,0 +1,12 @@
+services:
+  gestionale-area41:
+    build: .
+    container_name: gestionale-area41
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./database.json:/app/database.json
+      - ./users.json:/app/users.json
+      - ./backup:/app/backup
+      - ./uploads:/app/uploads
+    restart: unless-stopped

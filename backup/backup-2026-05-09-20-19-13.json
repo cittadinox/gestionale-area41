@@ -1,0 +1,29 @@
+{
+  "interventi": [
+    {
+      "id": 1778349823854,
+      "nome": "prova",
+      "telefono": "ffffffffffffffff",
+      "dispositivo": "ggggggggggggggggg",
+      "codiceSblocco": "hhhhhhhhhhhhhhhh",
+      "data": "2026-05-09",
+      "prezzo": "3333333333",
+      "stato": "In lavorazione",
+      "note": "rrrrrrrrrrrrrrrrrrrrrrrr"
+    }
+  ],
+  "ordini": [
+    {
+      "id": 1778349859062,
+      "nome": "r",
+      "telefono": "",
+      "prodotto": "rrrrrrrrrr",
+      "modello": "",
+      "data": "",
+      "prezzo": "",
+      "acconto": "",
+      "stato": "Da ordinare",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "interventi": [
+    {
+      "id": 1778349823854,
+      "nome": "prova",
+      "telefono": "ffffffffffffffff",
+      "dispositivo": "ggggggggggggggggg",
+      "codiceSblocco": "hhhhhhhhhhhhhhhh",
+      "data": "2026-05-09",
+      "prezzo": "3333333333",
+      "stato": "Consegnato",
+      "note": "rrrrrrrrrrrrrrrrrrrrrrrr"
+    },
+    {
+      "id": 1778359454148,
+      "nome": "foto",
+      "telefono": "foto 2",
+      "dispositivo": "ddddddddddd",
+      "codiceSblocco": "fffffffff",
+      "data": "2026-05-09",
+      "prezzo": "34",
+      "stato": "In lavorazione",
+      "note": "dddd"
+    },
+    {
+      "id": 1778360038674,
+      "nome": "foto 2",
+      "telefono": "666666",
+      "dispositivo": "5555",
+      "codiceSblocco": "444",
+      "data": "2026-05-09",
+      "prezzo": "43",
+      "stato": "In attesa",
+      "note": "",
+      "foto": "/uploads/foto-1778360038644.jpg"
+    }
+  ],
+  "ordini": [
+    {
+      "id": 1778349859062,
+      "nome": "r",
+      "telefono": "",
+      "prodotto": "rrrrrrrrrr",
+      "modello": "",
+      "data": "",
+      "prezzo": "",
+      "acconto": "",
+      "stato": "Da ordinare",
+      "note": ""
+    }
+  ]
+}
