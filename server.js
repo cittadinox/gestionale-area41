@@ -12,10 +12,16 @@ app.use(session({
     saveUninitialized: false
 }));
 const PORT = 3000;
-const DATABASE_FILE = path.join(__dirname, "database.json");
-const BACKUP_DIR = path.join(__dirname, "backup");
-const UPLOADS_DIR = path.join(__dirname, "uploads");
-const USERS_FILE = path.join(__dirname, "users.json");
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+const DATABASE_FILE = path.join(DATA_DIR, "database.json");
+const BACKUP_DIR = path.join(DATA_DIR, "backup");
+const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
 
 function leggiUtenti() {
     if (!fs.existsSync(USERS_FILE)) {
