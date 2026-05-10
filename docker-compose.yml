@@ -1,12 +1,14 @@
 services:
   gestionale-area41:
-    build: .
+    image: node:24-alpine
     container_name: gestionale-area41
+    working_dir: /app
+    command: sh -c "npm install && node server.js"
     ports:
       - "3000:3000"
     volumes:
-      - ./database.json:/app/database.json
-      - ./users.json:/app/users.json
-      - ./backup:/app/backup
-      - ./uploads:/app/uploads
+      - gestionale_area41_data:/app
     restart: unless-stopped
+
+volumes:
+  gestionale_area41_data:
