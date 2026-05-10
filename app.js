@@ -1,14 +1,12 @@
 let interventi = [];
 let ordini = [];
+
 let interventoInModifica = null;
 let ordineInModifica = null;
 
 async function caricaDati() {
-
     try {
-
         const risposta = await fetch("/api/dati");
-
         const dati = await risposta.json();
 
         interventi = dati.interventi || [];
@@ -19,16 +17,12 @@ async function caricaDati() {
         aggiornaHome();
 
     } catch (errore) {
-
         console.error("Errore caricamento dati:", errore);
-
     }
 }
 
 async function salvaDati() {
-
     try {
-
         await fetch("/api/dati", {
             method: "POST",
             headers: {
@@ -39,26 +33,21 @@ async function salvaDati() {
                 ordini
             })
         });
-
     } catch (errore) {
-
         console.error("Errore salvataggio dati:", errore);
-
     }
 }
-function apriPagina(idPagina) {
 
+function apriPagina(idPagina) {
     document.querySelectorAll(".pagina").forEach(pagina => {
         pagina.classList.remove("attiva");
     });
 
     document.getElementById(idPagina).classList.add("attiva");
-
     aggiornaHome();
 }
 
 async function salvaIntervento() {
-
     const nome = document.getElementById("nome").value.trim();
     const telefono = document.getElementById("telefono").value.trim();
     const dispositivo = document.getElementById("dispositivo").value.trim();
@@ -67,28 +56,29 @@ async function salvaIntervento() {
     const prezzo = document.getElementById("prezzo").value;
     const stato = document.getElementById("statoIntervento").value;
     const note = document.getElementById("note").value.trim();
-let foto = "";
 
-const inputFoto = document.getElementById("fotoIntervento");
+    let foto = "";
 
-if (inputFoto.files.length > 0) {
-    const formData = new FormData();
-    formData.append("foto", inputFoto.files[0]);
+    const inputFoto = document.getElementById("fotoIntervento");
 
-    const rispostaUpload = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-    });
+    if (inputFoto.files.length > 0) {
+        const formData = new FormData();
+        formData.append("foto", inputFoto.files[0]);
 
-    const risultatoUpload = await rispostaUpload.json();
+        const rispostaUpload = await fetch("/api/upload", {
+            method: "POST",
+            body: formData
+        });
 
-    if (risultatoUpload.success) {
-        foto = risultatoUpload.file;
-    } else {
-        alert("Errore durante il caricamento della foto.");
-        return;
+        const risultatoUpload = await rispostaUpload.json();
+
+        if (risultatoUpload.success) {
+            foto = risultatoUpload.file;
+        } else {
+            alert("Errore durante il caricamento della foto.");
+            return;
+        }
     }
-}
 
     if (nome === "" || telefono === "" || dispositivo === "") {
         alert("Compila almeno nome, telefono e dispositivo.");
@@ -96,70 +86,64 @@ if (inputFoto.files.length > 0) {
     }
 
     if (interventoInModifica) {
+        interventi = interventi.map(intervento => {
+            if (intervento.id === interventoInModifica) {
+                return {
+                    id: intervento.id,
+                    nome,
+                    telefono,
+                    dispositivo,
+                    codiceSblocco,
+                    data,
+                    prezzo,
+                    stato,
+                    note,
+                    foto: foto || intervento.foto || ""
+                };
+            }
 
-    interventi = interventi.map(intervento => {
-        if (intervento.id === interventoInModifica) {
-            return {
-                id: intervento.id,
-                nome,
-                telefono,
-                dispositivo,
-                codiceSblocco,
-                data,
-                prezzo,
-                stato,
-                note,
-foto: foto || intervento.foto || ""
-            };
-        }
+            return intervento;
+        });
 
-        return intervento;
-    });
+        interventoInModifica = null;
 
-    interventoInModifica = null;
+    } else {
+        const nuovoIntervento = {
+            id: Date.now(),
+            nome,
+            telefono,
+            dispositivo,
+            codiceSblocco,
+            data,
+            prezzo,
+            stato,
+            note,
+            foto
+        };
 
-} else {
+        interventi.push(nuovoIntervento);
+    }
 
-    const nuovoIntervento = {
-        id: Date.now(),
-        nome,
-        telefono,
-        dispositivo,
-        codiceSblocco,
-        data,
-        prezzo,
-        stato,
-        note,
-        foto
-    };
-
-    interventi.push(nuovoIntervento);
-}
-
-    salvaDati();
-
+    await salvaDati();
     pulisciCampiIntervento();
-
     mostraInterventi();
-
     aggiornaHome();
+
+    alert("Intervento salvato correttamente.");
 }
 
 function mostraInterventi() {
-
     const lista = document.getElementById("listaInterventi");
 
-    const ricerca = document
-        .getElementById("ricerca")
-        .value
-        .toLowerCase();
+    const ricercaInput = document.getElementById("ricerca");
+    const ricerca = ricercaInput ? ricercaInput.value.toLowerCase() : "";
 
     lista.innerHTML = "";
 
     const risultati = interventi.filter(intervento =>
-        intervento.nome.toLowerCase().includes(ricerca) ||
-        intervento.telefono.toLowerCase().includes(ricerca) ||
-        intervento.dispositivo.toLowerCase().includes(ricerca)
+        (intervento.nome || "").toLowerCase().includes(ricerca) ||
+        (intervento.telefono || "").toLowerCase().includes(ricerca) ||
+        (intervento.dispositivo || "").toLowerCase().includes(ricerca)
     );
 
     if (risultati.length === 0) {
@@ -168,7 +152,6 @@ function mostraInterventi() {
     }
 
     risultati.slice().reverse().forEach(intervento => {
-
         const card = document.createElement("div");
         card.className = "card";
 
@@ -185,13 +168,13 @@ function mostraInterventi() {
         }
 
         card.innerHTML = `
-            <p><strong>Cliente:</strong> ${intervento.nome}</p>
-            <p><strong>Telefono:</strong> ${intervento.telefono}</p>
-            <p><strong>Dispositivo:</strong> ${intervento.dispositivo}</p>
+            <p><strong>Cliente:</strong> ${intervento.nome || "-"}</p>
+            <p><strong>Telefono:</strong> ${intervento.telefono || "-"}</p>
+            <p><strong>Dispositivo:</strong> ${intervento.dispositivo || "-"}</p>
             <p><strong>Codice Sblocco:</strong> ${intervento.codiceSblocco || "-"}</p>
             <p><strong>Data:</strong> ${intervento.data || "-"}</p>
             <p><strong>Prezzo:</strong> ${intervento.prezzo ? "€ " + intervento.prezzo : "-"}</p>
-            <p><strong>Stato:</strong> <span class="badge">${intervento.stato}</span></p>
+            <p><strong>Stato:</strong> <span class="badge">${intervento.stato || "-"}</span></p>
             <p><strong>Note:</strong> ${intervento.note || "-"}</p>
 
             ${fotoHtml}
@@ -210,17 +193,11 @@ function mostraInterventi() {
                     Storico
                 </button>
 
-                <button
-                    class="completa-btn"
-                    onclick="completaIntervento(${intervento.id})"
-                >
+                <button class="completa-btn" onclick="completaIntervento(${intervento.id})">
                     Consegna
                 </button>
 
-                <button
-                    class="elimina-btn"
-                    onclick="eliminaIntervento(${intervento.id})"
-                >
+                <button class="elimina-btn" onclick="eliminaIntervento(${intervento.id})">
                     Elimina
                 </button>
 
@@ -232,16 +209,15 @@ function mostraInterventi() {
 }
 
 function modificaIntervento(id) {
-
     const intervento = interventi.find(item => item.id === id);
 
     if (!intervento) {
         return;
     }
 
-    document.getElementById("nome").value = intervento.nome;
-    document.getElementById("telefono").value = intervento.telefono;
-    document.getElementById("dispositivo").value = intervento.dispositivo;
+    document.getElementById("nome").value = intervento.nome || "";
+    document.getElementById("telefono").value = intervento.telefono || "";
+    document.getElementById("dispositivo").value = intervento.dispositivo || "";
     document.getElementById("codiceSblocco").value = intervento.codiceSblocco || "";
     document.getElementById("data").value = intervento.data || "";
     document.getElementById("prezzo").value = intervento.prezzo || "";
@@ -250,13 +226,12 @@ function modificaIntervento(id) {
 
     interventoInModifica = id;
 
+    apriPagina("assistenza");
     window.scrollTo(0, 0);
 }
 
-function completaIntervento(id) {
-
+async function completaIntervento(id) {
     interventi = interventi.map(intervento => {
-
         if (intervento.id === id) {
             intervento.stato = "Consegnato";
         }
@@ -264,36 +239,26 @@ function completaIntervento(id) {
         return intervento;
     });
 
-    salvaDati();
-
+    await salvaDati();
     mostraInterventi();
-
     aggiornaHome();
 }
 
-function eliminaIntervento(id) {
-
-    const conferma = confirm(
-        "Vuoi eliminare questo intervento?"
-    );
+async function eliminaIntervento(id) {
+    const conferma = confirm("Vuoi eliminare questo intervento?");
 
     if (!conferma) {
         return;
     }
 
-    interventi = interventi.filter(
-        intervento => intervento.id !== id
-    );
+    interventi = interventi.filter(intervento => intervento.id !== id);
 
-    salvaDati();
-
+    await salvaDati();
     mostraInterventi();
-
     aggiornaHome();
 }
 
 function pulisciCampiIntervento() {
-
     document.getElementById("nome").value = "";
     document.getElementById("telefono").value = "";
     document.getElementById("dispositivo").value = "";
@@ -302,51 +267,19 @@ function pulisciCampiIntervento() {
     document.getElementById("prezzo").value = "";
     document.getElementById("statoIntervento").value = "In attesa";
     document.getElementById("note").value = "";
-document.getElementById("fotoIntervento").value = "";
+    document.getElementById("fotoIntervento").value = "";
 }
 
-function salvaOrdine() {
-
-    const nome = document
-        .getElementById("ordineNome")
-        .value
-        .trim();
-
-    const telefono = document
-        .getElementById("ordineTelefono")
-        .value
-        .trim();
-
-    const prodotto = document
-        .getElementById("prodottoRichiesto")
-        .value
-        .trim();
-
-    const modello = document
-        .getElementById("modelloRichiesto")
-        .value
-        .trim();
-
-    const data = document
-        .getElementById("ordineData")
-        .value;
-
-    const prezzo = document
-        .getElementById("ordinePrezzo")
-        .value;
-
-    const acconto = document
-        .getElementById("ordineAcconto")
-        .value;
-
-    const stato = document
-        .getElementById("statoOrdine")
-        .value;
-
-    const note = document
-        .getElementById("ordineNote")
-        .value
-        .trim();
+async function salvaOrdine() {
+    const nome = document.getElementById("ordineNome").value.trim();
+    const telefono = document.getElementById("ordineTelefono").value.trim();
+    const prodotto = document.getElementById("prodottoRichiesto").value.trim();
+    const modello = document.getElementById("modelloRichiesto").value.trim();
+    const data = document.getElementById("ordineData").value;
+    const prezzo = document.getElementById("ordinePrezzo").value;
+    const acconto = document.getElementById("ordineAcconto").value;
+    const stato = document.getElementById("statoOrdine").value;
+    const note = document.getElementById("ordineNote").value.trim();
 
     if (nome === "" || prodotto === "") {
         alert("Compila almeno nome cliente e prodotto.");
@@ -354,72 +287,65 @@ function salvaOrdine() {
     }
 
     if (ordineInModifica) {
+        ordini = ordini.map(ordine => {
+            if (ordine.id === ordineInModifica) {
+                return {
+                    id: ordine.id,
+                    nome,
+                    telefono,
+                    prodotto,
+                    modello,
+                    data,
+                    prezzo,
+                    acconto,
+                    stato,
+                    note
+                };
+            }
 
-    ordini = ordini.map(ordine => {
-        if (ordine.id === ordineInModifica) {
-            return {
-                id: ordine.id,
-                nome,
-                telefono,
-                prodotto,
-                modello,
-                data,
-                prezzo,
-                acconto,
-                stato,
-                note,
-                foto
-            };
-        }
+            return ordine;
+        });
 
-        return ordine;
-    });
+        ordineInModifica = null;
 
-    ordineInModifica = null;
+    } else {
+        const nuovoOrdine = {
+            id: Date.now(),
+            nome,
+            telefono,
+            prodotto,
+            modello,
+            data,
+            prezzo,
+            acconto,
+            stato,
+            note
+        };
 
-} else {
+        ordini.push(nuovoOrdine);
+    }
 
-    const nuovoOrdine = {
-        id: Date.now(),
-        nome,
-        telefono,
-        prodotto,
-        modello,
-        data,
-        prezzo,
-        acconto,
-        stato,
-        note,
-        foto
-    };
-
-    ordini.push(nuovoOrdine);
-}
-
-    salvaDati();
-
+    await salvaDati();
     pulisciCampiOrdine();
-
     mostraOrdini();
-
     aggiornaHome();
+
+    alert("Richiesta salvata correttamente.");
 }
 
 function mostraOrdini() {
-
     const lista = document.getElementById("listaOrdini");
 
-    const ricerca = document
-        .getElementById("ricercaOrdini")
-        .value
-        .toLowerCase();
+    const ricercaInput = document.getElementById("ricercaOrdini");
+    const ricerca = ricercaInput ? ricercaInput.value.toLowerCase() : "";
 
     lista.innerHTML = "";
 
     const risultati = ordini.filter(ordine =>
-        ordine.nome.toLowerCase().includes(ricerca) ||
-        ordine.prodotto.toLowerCase().includes(ricerca) ||
-        ordine.telefono.toLowerCase().includes(ricerca)
+        (ordine.nome || "").toLowerCase().includes(ricerca) ||
+        (ordine.telefono || "").toLowerCase().includes(ricerca) ||
+        (ordine.prodotto || "").toLowerCase().includes(ricerca) ||
+        (ordine.modello || "").toLowerCase().includes(ricerca)
     );
 
     if (risultati.length === 0) {
@@ -427,44 +353,36 @@ function mostraOrdini() {
         return;
     }
 
-    risultati.reverse().forEach(ordine => {
-
+    risultati.slice().reverse().forEach(ordine => {
         const card = document.createElement("div");
-
         card.className = "card";
 
         card.innerHTML = `
-            <p><strong>Cliente:</strong> ${ordine.nome}</p>
+            <p><strong>Cliente:</strong> ${ordine.nome || "-"}</p>
             <p><strong>Telefono:</strong> ${ordine.telefono || "-"}</p>
-            <p><strong>Prodotto:</strong> ${ordine.prodotto}</p>
+            <p><strong>Prodotto:</strong> ${ordine.prodotto || "-"}</p>
             <p><strong>Modello:</strong> ${ordine.modello || "-"}</p>
             <p><strong>Data:</strong> ${ordine.data || "-"}</p>
             <p><strong>Prezzo:</strong> ${ordine.prezzo ? "€ " + ordine.prezzo : "-"}</p>
             <p><strong>Acconto:</strong> ${ordine.acconto ? "€ " + ordine.acconto : "-"}</p>
-            <p><strong>Stato:</strong> <span class="badge">${ordine.stato}</span></p>
+            <p><strong>Stato:</strong> <span class="badge">${ordine.stato || "-"}</span></p>
             <p><strong>Note:</strong> ${ordine.note || "-"}</p>
 
             <div class="azioni">
 
-<button onclick="modificaOrdine(${ordine.id})">
-    Modifica
-</button>
+                <button onclick="modificaOrdine(${ordine.id})">
+                    Modifica
+                </button>
 
-<button onclick="apriStoricoCliente('${ordine.nome}')">
-    Storico
-</button>
+                <button onclick="apriStoricoCliente('${ordine.nome}')">
+                    Storico
+                </button>
 
-                <button
-                    class="completa-btn"
-                    onclick="consegnaOrdine(${ordine.id})"
-                >
+                <button class="completa-btn" onclick="consegnaOrdine(${ordine.id})">
                     Consegnato
                 </button>
 
-                <button
-                    class="elimina-btn"
-                    onclick="eliminaOrdine(${ordine.id})"
-                >
+                <button class="elimina-btn" onclick="eliminaOrdine(${ordine.id})">
                     Elimina
                 </button>
 
@@ -472,22 +390,19 @@ function mostraOrdini() {
         `;
 
         lista.appendChild(card);
-
     });
-
 }
 
 function modificaOrdine(id) {
-
     const ordine = ordini.find(item => item.id === id);
 
     if (!ordine) {
         return;
     }
 
-    document.getElementById("ordineNome").value = ordine.nome;
+    document.getElementById("ordineNome").value = ordine.nome || "";
     document.getElementById("ordineTelefono").value = ordine.telefono || "";
-    document.getElementById("prodottoRichiesto").value = ordine.prodotto;
+    document.getElementById("prodottoRichiesto").value = ordine.prodotto || "";
     document.getElementById("modelloRichiesto").value = ordine.modello || "";
     document.getElementById("ordineData").value = ordine.data || "";
     document.getElementById("ordinePrezzo").value = ordine.prezzo || "";
@@ -497,13 +412,12 @@ function modificaOrdine(id) {
 
     ordineInModifica = id;
 
+    apriPagina("ordini");
     window.scrollTo(0, 0);
 }
 
-function consegnaOrdine(id) {
-
+async function consegnaOrdine(id) {
     ordini = ordini.map(ordine => {
-
         if (ordine.id === id) {
             ordine.stato = "Consegnato";
         }
@@ -511,36 +425,26 @@ function consegnaOrdine(id) {
         return ordine;
     });
 
-    salvaDati();
-
+    await salvaDati();
     mostraOrdini();
-
     aggiornaHome();
 }
 
-function eliminaOrdine(id) {
-
-    const conferma = confirm(
-        "Vuoi eliminare questo ordine?"
-    );
+async function eliminaOrdine(id) {
+    const conferma = confirm("Vuoi eliminare questo ordine?");
 
     if (!conferma) {
         return;
     }
 
-    ordini = ordini.filter(
-        ordine => ordine.id !== id
-    );
+    ordini = ordini.filter(ordine => ordine.id !== id);
 
-    salvaDati();
-
+    await salvaDati();
     mostraOrdini();
-
     aggiornaHome();
 }
 
 function pulisciCampiOrdine() {
-
     document.getElementById("ordineNome").value = "";
     document.getElementById("ordineTelefono").value = "";
     document.getElementById("prodottoRichiesto").value = "";
@@ -553,8 +457,8 @@ function pulisciCampiOrdine() {
 }
 
 function aggiornaHome() {
-
     const riepilogoInterventi = document.getElementById("riepilogoInterventi");
+    const riepilogoOrdini = document.getElementById("riepilogoOrdini");
 
     const attiviInterventi = interventi.filter(intervento =>
         intervento.stato !== "Consegnato" &&
@@ -566,9 +470,7 @@ function aggiornaHome() {
     if (attiviInterventi.length === 0) {
         riepilogoInterventi.innerHTML = "<p>Nessuna assistenza attiva.</p>";
     } else {
-
-        attiviInterventi.reverse().forEach(intervento => {
-
+        attiviInterventi.slice().reverse().forEach(intervento => {
             riepilogoInterventi.innerHTML += `
                 <div class="card">
                     <p><strong>${intervento.nome}</strong> - ${intervento.dispositivo}</p>
@@ -577,8 +479,6 @@ function aggiornaHome() {
             `;
         });
     }
-
-    const riepilogoOrdini = document.getElementById("riepilogoOrdini");
 
     const attiviOrdini = ordini.filter(ordine =>
         ordine.stato !== "Consegnato" &&
@@ -590,9 +490,7 @@ function aggiornaHome() {
     if (attiviOrdini.length === 0) {
         riepilogoOrdini.innerHTML = "<p>Nessun ordine attivo.</p>";
     } else {
-
-        attiviOrdini.reverse().forEach(ordine => {
-
+        attiviOrdini.slice().reverse().forEach(ordine => {
             riepilogoOrdini.innerHTML += `
                 <div class="card">
                     <p><strong>${ordine.nome}</strong> - ${ordine.prodotto}</p>
@@ -604,7 +502,6 @@ function aggiornaHome() {
 }
 
 function stampaIntervento(id) {
-
     const intervento = interventi.find(item => item.id === id);
 
     if (!intervento) {
@@ -655,7 +552,6 @@ function stampaIntervento(id) {
             <p><strong>Prezzo:</strong> ${intervento.prezzo ? "€ " + intervento.prezzo : "-"}</p>
             <p><strong>Stato:</strong> ${intervento.stato || "-"}</p>
             <p><strong>Note:</strong> ${intervento.note || "-"}</p>
-${intervento.foto ? `<img src="${intervento.foto}" class="foto-card">` : ""}
 
             <div class="firma">
                 <p>Firma Cliente</p>
@@ -678,7 +574,6 @@ ${intervento.foto ? `<img src="${intervento.foto}" class="foto-card">` : ""}
 }
 
 function apriStoricoCliente(nomeCliente) {
-
     const titolo = document.getElementById("titoloStoricoCliente");
     const contenuto = document.getElementById("contenutoStoricoCliente");
 
@@ -766,6 +661,136 @@ async function creaBackup() {
     }
 }
 
+async function caricaListaBackup() {
+    const lista = document.getElementById("listaBackup");
+
+    lista.innerHTML = "<p>Caricamento backup...</p>";
+
+    try {
+        const risposta = await fetch("/api/backup");
+        const dati = await risposta.json();
+
+        if (!dati.success || dati.backups.length === 0) {
+            lista.innerHTML = "<p>Nessun backup trovato.</p>";
+            return;
+        }
+
+        lista.innerHTML = "";
+
+        dati.backups.forEach(file => {
+            const div = document.createElement("div");
+            div.className = "card";
+
+            div.innerHTML = `
+                <p><strong>Backup:</strong> ${file}</p>
+
+                <button class="completa-btn" onclick="ripristinaBackup('${file}')">
+                    Ripristina questo backup
+                </button>
+
+                <button class="elimina-btn" onclick="eliminaBackup('${file}')">
+                    Elimina backup
+                </button>
+            `;
+
+            lista.appendChild(div);
+        });
+
+    } catch (errore) {
+        lista.innerHTML = "<p>Errore durante il caricamento dei backup.</p>";
+        console.error(errore);
+    }
+}
+
+async function ripristinaBackup(file) {
+    const conferma = confirm(
+        "ATTENZIONE: ripristinando questo backup, i dati attuali verranno sostituiti. Vuoi continuare?"
+    );
+
+    if (!conferma) {
+        return;
+    }
+
+    const risposta = await fetch("/api/ripristina-backup", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ file })
+    });
+
+    const risultato = await risposta.json();
+
+    if (risultato.success) {
+        alert("Backup ripristinato correttamente.");
+        await caricaDati();
+        apriPagina("home");
+    } else {
+        alert(risultato.message || "Errore durante il ripristino.");
+    }
+}
+
+async function eliminaBackup(file) {
+    const conferma = confirm(
+        "Vuoi eliminare definitivamente questo backup? Questa operazione non può essere annullata."
+    );
+
+    if (!conferma) {
+        return;
+    }
+
+    const risposta = await fetch("/api/elimina-backup", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ file })
+    });
+
+    const risultato = await risposta.json();
+
+    if (risultato.success) {
+        alert("Backup eliminato correttamente.");
+        caricaListaBackup();
+    } else {
+        alert(risultato.message || "Errore durante l'eliminazione del backup.");
+    }
+}
+
+async function cambiaPassword() {
+    const vecchiaPassword = document.getElementById("vecchiaPassword").value;
+    const nuovaPassword = document.getElementById("nuovaPassword").value;
+    const confermaNuovaPassword = document.getElementById("confermaNuovaPassword").value;
+
+    if (nuovaPassword !== confermaNuovaPassword) {
+        alert("Le nuove password non coincidono.");
+        return;
+    }
+
+    const risposta = await fetch("/api/cambia-password", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            vecchiaPassword,
+            nuovaPassword
+        })
+    });
+
+    const risultato = await risposta.json();
+
+    if (risultato.success) {
+        alert("Password modificata correttamente.");
+
+        document.getElementById("vecchiaPassword").value = "";
+        document.getElementById("nuovaPassword").value = "";
+        document.getElementById("confermaNuovaPassword").value = "";
+    } else {
+        alert(risultato.message || "Errore durante il cambio password.");
+    }
+}
+
 async function controllaSessione() {
     const risposta = await fetch("/api/sessione");
     const dati = await risposta.json();
@@ -812,147 +837,6 @@ async function logout() {
     });
 
     location.reload();
-}
-async function cambiaPassword() {
-
-    const vecchiaPassword = document
-        .getElementById("vecchiaPassword")
-        .value;
-
-    const nuovaPassword = document
-        .getElementById("nuovaPassword")
-        .value;
-
-    const confermaNuovaPassword = document
-        .getElementById("confermaNuovaPassword")
-        .value;
-
-    if (nuovaPassword !== confermaNuovaPassword) {
-        alert("Le nuove password non coincidono.");
-        return;
-    }
-
-    const risposta = await fetch("/api/cambia-password", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            vecchiaPassword,
-            nuovaPassword
-        })
-    });
-
-    const risultato = await risposta.json();
-
-    if (risultato.success) {
-        alert("Password modificata correttamente.");
-
-        document.getElementById("vecchiaPassword").value = "";
-        document.getElementById("nuovaPassword").value = "";
-        document.getElementById("confermaNuovaPassword").value = "";
-    } else {
-        alert(risultato.message || "Errore durante il cambio password.");
-    }
-}
-
-async function caricaListaBackup() {
-
-    const lista = document.getElementById("listaBackup");
-
-    lista.innerHTML = "<p>Caricamento backup...</p>";
-
-    try {
-        const risposta = await fetch("/api/backup");
-        const dati = await risposta.json();
-
-        if (!dati.success || dati.backups.length === 0) {
-            lista.innerHTML = "<p>Nessun backup trovato.</p>";
-            return;
-        }
-
-        lista.innerHTML = "";
-
-        dati.backups.forEach(file => {
-            const div = document.createElement("div");
-            div.className = "card";
-
-            div.innerHTML = `
-    <p><strong>Backup:</strong> ${file}</p>
-
-    <button class="completa-btn" onclick="ripristinaBackup('${file}')">
-        Ripristina questo backup
-    </button>
-
-    <button class="elimina-btn" onclick="eliminaBackup('${file}')">
-        Elimina backup
-    </button>
-`;
-
-            lista.appendChild(div);
-        });
-
-    } catch (errore) {
-        lista.innerHTML = "<p>Errore durante il caricamento dei backup.</p>";
-        console.error(errore);
-    }
-}
-
-async function ripristinaBackup(file) {
-
-    const conferma = confirm(
-        "ATTENZIONE: ripristinando questo backup, i dati attuali verranno sostituiti. Vuoi continuare?"
-    );
-
-    if (!conferma) {
-        return;
-    }
-
-    const risposta = await fetch("/api/ripristina-backup", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ file })
-    });
-
-    const risultato = await risposta.json();
-
-    if (risultato.success) {
-        alert("Backup ripristinato correttamente.");
-        await caricaDati();
-        apriPagina("home");
-    } else {
-        alert(risultato.message || "Errore durante il ripristino.");
-    }
-}
-
-async function eliminaBackup(file) {
-
-    const conferma = confirm(
-        "Vuoi eliminare definitivamente questo backup? Questa operazione non può essere annullata."
-    );
-
-    if (!conferma) {
-        return;
-    }
-
-    const risposta = await fetch("/api/elimina-backup", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ file })
-    });
-
-    const risultato = await risposta.json();
-
-    if (risultato.success) {
-        alert("Backup eliminato correttamente.");
-        caricaListaBackup();
-    } else {
-        alert(risultato.message || "Errore durante l'eliminazione del backup.");
-    }
 }
 
 controllaSessione();
