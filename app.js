@@ -1,8 +1,10 @@
 let interventi = [];
 let ordini = [];
+let crediti = [];
 
 let interventoInModifica = null;
 let ordineInModifica = null;
+let creditoInModifica = null;
 
 async function caricaDati() {
     try {
@@ -10,10 +12,12 @@ async function caricaDati() {
         const dati = await risposta.json();
 
         interventi = dati.interventi || [];
-        ordini = dati.ordini || [];
+ordini = dati.ordini || [];
+crediti = dati.crediti || [];
 
         mostraInterventi();
         mostraOrdini();
+mostraCrediti();
         aggiornaHome();
 
     } catch (errore) {
@@ -29,9 +33,10 @@ async function salvaDati() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                interventi,
-                ordini
-            })
+    interventi,
+    ordini,
+    crediti
+})
         });
     } catch (errore) {
         console.error("Errore salvataggio dati:", errore);
@@ -456,6 +461,201 @@ function pulisciCampiOrdine() {
     document.getElementById("ordineNote").value = "";
 }
 
+async function salvaCredito() {
+    const nome = document.getElementById("creditoNome").value.trim();
+    const telefono = document.getElementById("creditoTelefono").value.trim();
+    const motivo = document.getElementById("creditoMotivo").value.trim();
+    const importo = document.getElementById("creditoImporto").value;
+    const acconto = document.getElementById("creditoAcconto").value;
+    const data = document.getElementById("creditoData").value;
+    const scadenza = document.getElementById("creditoScadenza").value;
+    const stato = document.getElementById("creditoStato").value;
+    const note = document.getElementById("creditoNote").value.trim();
+
+    if (nome === "" || motivo === "" || importo === "") {
+        alert("Compila almeno nome cliente, motivo e importo dovuto.");
+        return;
+    }
+
+    if (creditoInModifica) {
+        crediti = crediti.map(credito => {
+            if (credito.id === creditoInModifica) {
+                return {
+                    id: credito.id,
+                    nome,
+                    telefono,
+                    motivo,
+                    importo,
+                    acconto,
+                    data,
+                    scadenza,
+                    stato,
+                    note
+                };
+            }
+
+            return credito;
+        });
+
+        creditoInModifica = null;
+
+    } else {
+        const nuovoCredito = {
+            id: Date.now(),
+            nome,
+            telefono,
+            motivo,
+            importo,
+            acconto,
+            data,
+            scadenza,
+            stato,
+            note
+        };
+
+        crediti.push(nuovoCredito);
+    }
+
+    await salvaDati();
+    pulisciCampiCredito();
+    mostraCrediti();
+    aggiornaHome();
+
+    alert("Credito salvato correttamente.");
+}
+
+function mostraCrediti() {
+    const lista = document.getElementById("listaCrediti");
+
+    if (!lista) {
+        return;
+    }
+
+    const ricercaInput = document.getElementById("ricercaCrediti");
+    const ricerca = ricercaInput ? ricercaInput.value.toLowerCase() : "";
+
+    lista.innerHTML = "";
+
+    const risultati = crediti.filter(credito =>
+        (credito.nome || "").toLowerCase().includes(ricerca) ||
+        (credito.telefono || "").toLowerCase().includes(ricerca) ||
+        (credito.motivo || "").toLowerCase().includes(ricerca)
+    );
+
+    if (risultati.length === 0) {
+        lista.innerHTML = "<p>Nessun credito trovato.</p>";
+        return;
+    }
+
+    risultati.slice().reverse().forEach(credito => {
+        const importo = parseFloat(credito.importo) || 0;
+        const acconto = parseFloat(credito.acconto) || 0;
+        const residuo = importo - acconto;
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <p><strong>Cliente:</strong> ${credito.nome || "-"}</p>
+            <p><strong>Telefono:</strong> ${credito.telefono || "-"}</p>
+            <p><strong>Motivo:</strong> ${credito.motivo || "-"}</p>
+            <p><strong>Importo dovuto:</strong> € ${importo.toFixed(2)}</p>
+            <p><strong>Acconto ricevuto:</strong> € ${acconto.toFixed(2)}</p>
+            <p><strong>Residuo:</strong> € ${residuo.toFixed(2)}</p>
+            <p><strong>Data:</strong> ${credito.data || "-"}</p>
+            <p><strong>Scadenza:</strong> ${credito.scadenza || "-"}</p>
+            <p><strong>Stato:</strong> <span class="badge">${credito.stato || "-"}</span></p>
+            <p><strong>Note:</strong> ${credito.note || "-"}</p>
+
+            <div class="azioni">
+
+                <button onclick="modificaCredito(${credito.id})">
+                    Modifica
+                </button>
+
+                <button onclick="apriStoricoCliente('${credito.nome}')">
+                    Storico
+                </button>
+
+                <button class="completa-btn" onclick="pagaCredito(${credito.id})">
+                    Segna Pagato
+                </button>
+
+                <button class="elimina-btn" onclick="eliminaCredito(${credito.id})">
+                    Elimina
+                </button>
+
+            </div>
+        `;
+
+        lista.appendChild(card);
+    });
+}
+
+function modificaCredito(id) {
+    const credito = crediti.find(item => item.id === id);
+
+    if (!credito) {
+        return;
+    }
+
+    document.getElementById("creditoNome").value = credito.nome || "";
+    document.getElementById("creditoTelefono").value = credito.telefono || "";
+    document.getElementById("creditoMotivo").value = credito.motivo || "";
+    document.getElementById("creditoImporto").value = credito.importo || "";
+    document.getElementById("creditoAcconto").value = credito.acconto || "";
+    document.getElementById("creditoData").value = credito.data || "";
+    document.getElementById("creditoScadenza").value = credito.scadenza || "";
+    document.getElementById("creditoStato").value = credito.stato || "Da incassare";
+    document.getElementById("creditoNote").value = credito.note || "";
+
+    creditoInModifica = id;
+
+    apriPagina("crediti");
+    window.scrollTo(0, 0);
+}
+
+async function pagaCredito(id) {
+    crediti = crediti.map(credito => {
+        if (credito.id === id) {
+            credito.stato = "Pagato";
+            credito.acconto = credito.importo;
+        }
+
+        return credito;
+    });
+
+    await salvaDati();
+    mostraCrediti();
+    aggiornaHome();
+}
+
+async function eliminaCredito(id) {
+    const conferma = confirm("Vuoi eliminare questo credito?");
+
+    if (!conferma) {
+        return;
+    }
+
+    crediti = crediti.filter(credito => credito.id !== id);
+
+    await salvaDati();
+    mostraCrediti();
+    aggiornaHome();
+}
+
+function pulisciCampiCredito() {
+    document.getElementById("creditoNome").value = "";
+    document.getElementById("creditoTelefono").value = "";
+    document.getElementById("creditoMotivo").value = "";
+    document.getElementById("creditoImporto").value = "";
+    document.getElementById("creditoAcconto").value = "";
+    document.getElementById("creditoData").value = "";
+    document.getElementById("creditoScadenza").value = "";
+    document.getElementById("creditoStato").value = "Da incassare";
+    document.getElementById("creditoNote").value = "";
+}
+
 function aggiornaHome() {
     const riepilogoInterventi = document.getElementById("riepilogoInterventi");
     const riepilogoOrdini = document.getElementById("riepilogoOrdini");
@@ -478,6 +678,56 @@ function aggiornaHome() {
                 </div>
             `;
         });
+const attiviCrediti = crediti.filter(credito =>
+    credito.stato !== "Pagato" &&
+    credito.stato !== "Annullato"
+);
+
+let totaleCrediti = 0;
+
+attiviCrediti.forEach(credito => {
+    const importo = parseFloat(credito.importo) || 0;
+    const acconto = parseFloat(credito.acconto) || 0;
+    totaleCrediti += importo - acconto;
+});
+const riepilogoCrediti = document.getElementById("riepilogoCrediti");
+
+if (riepilogoCrediti) {
+    const attiviCrediti = crediti.filter(credito =>
+        credito.stato !== "Pagato" &&
+        credito.stato !== "Annullato"
+    );
+
+    let totaleCrediti = 0;
+
+    riepilogoCrediti.innerHTML = "";
+
+    if (attiviCrediti.length === 0) {
+        riepilogoCrediti.innerHTML = "<p>Nessun credito attivo.</p>";
+    } else {
+        attiviCrediti.slice().reverse().forEach(credito => {
+            const importo = parseFloat(credito.importo) || 0;
+            const acconto = parseFloat(credito.acconto) || 0;
+            const residuo = importo - acconto;
+
+            totaleCrediti += residuo;
+
+            riepilogoCrediti.innerHTML += `
+                <div class="card">
+                    <p><strong>${credito.nome}</strong> - ${credito.motivo}</p>
+                    <p>Residuo: <strong>€ ${residuo.toFixed(2)}</strong></p>
+                    <p>Stato: <span class="badge">${credito.stato}</span></p>
+                </div>
+            `;
+        });
+
+        riepilogoCrediti.innerHTML += `
+            <div class="card">
+                <h3>Totale da incassare: € ${totaleCrediti.toFixed(2)}</h3>
+            </div>
+        `;
+    }
+}
     }
 
     const attiviOrdini = ordini.filter(ordine =>

@@ -48,6 +48,10 @@
                     Richieste / Ordini Clienti
                 </button>
 
+<button onclick="apriPagina('crediti')">
+    Crediti Clienti
+</button>
+
                 <button onclick="creaBackup()">
                     Crea Backup
                 </button>
@@ -62,6 +66,9 @@
 
             <h2>Ordini Attivi</h2>
             <div id="riepilogoOrdini"></div>
+
+<h2>Crediti Attivi</h2>
+<div id="riepilogoCrediti"></div>
 
         </div>
 
@@ -169,6 +176,51 @@
             <div id="contenutoStoricoCliente"></div>
 
         </div>
+
+<!-- CREDITI CLIENTI -->
+<div id="crediti" class="pagina">
+
+    <button class="back-btn" onclick="apriPagina('home')">
+        Torna alla Home
+    </button>
+
+    <h2>Crediti Clienti</h2>
+
+    <div class="form-container">
+
+        <input type="text" id="creditoNome" placeholder="Nome Cliente">
+        <input type="text" id="creditoTelefono" placeholder="Numero Telefono">
+        <input type="text" id="creditoMotivo" placeholder="Motivo / Descrizione">
+        <input type="number" id="creditoImporto" placeholder="Importo Dovuto">
+        <input type="number" id="creditoAcconto" placeholder="Acconto Ricevuto">
+        <input type="date" id="creditoData">
+        <input type="date" id="creditoScadenza">
+
+        <select id="creditoStato">
+            <option value="Da incassare">Da incassare</option>
+            <option value="Parziale">Parziale</option>
+            <option value="Pagato">Pagato</option>
+            <option value="Annullato">Annullato</option>
+        </select>
+
+        <textarea id="creditoNote" placeholder="Note"></textarea>
+
+        <button onclick="salvaCredito()">
+            Salva Credito
+        </button>
+
+    </div>
+
+    <input
+        type="text"
+        id="ricercaCrediti"
+        placeholder="Cerca credito..."
+        onkeyup="mostraCrediti()"
+    >
+
+    <div id="listaCrediti"></div>
+
+</div>
 
         <!-- IMPOSTAZIONI -->
         <div id="impostazioni" class="pagina">
