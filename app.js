@@ -12,12 +12,12 @@ async function caricaDati() {
         const dati = await risposta.json();
 
         interventi = dati.interventi || [];
-ordini = dati.ordini || [];
-crediti = dati.crediti || [];
+        ordini = dati.ordini || [];
+        crediti = dati.crediti || [];
 
         mostraInterventi();
         mostraOrdini();
-mostraCrediti();
+        mostraCrediti();
         aggiornaHome();
 
     } catch (errore) {
@@ -33,10 +33,10 @@ async function salvaDati() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-    interventi,
-    ordini,
-    crediti
-})
+                interventi,
+                ordini,
+                crediti
+            })
         });
     } catch (errore) {
         console.error("Errore salvataggio dati:", errore);
@@ -52,6 +52,10 @@ function apriPagina(idPagina) {
     aggiornaHome();
 }
 
+/* =========================
+   ASSISTENZA
+========================= */
+
 async function salvaIntervento() {
     const nome = document.getElementById("nome").value.trim();
     const telefono = document.getElementById("telefono").value.trim();
@@ -66,7 +70,7 @@ async function salvaIntervento() {
 
     const inputFoto = document.getElementById("fotoIntervento");
 
-    if (inputFoto.files.length > 0) {
+    if (inputFoto && inputFoto.files.length > 0) {
         const formData = new FormData();
         formData.append("foto", inputFoto.files[0]);
 
@@ -113,7 +117,7 @@ async function salvaIntervento() {
         interventoInModifica = null;
 
     } else {
-        const nuovoIntervento = {
+        interventi.push({
             id: Date.now(),
             nome,
             telefono,
@@ -124,9 +128,7 @@ async function salvaIntervento() {
             stato,
             note,
             foto
-        };
-
-        interventi.push(nuovoIntervento);
+        });
     }
 
     await salvaDati();
@@ -139,6 +141,8 @@ async function salvaIntervento() {
 
 function mostraInterventi() {
     const lista = document.getElementById("listaInterventi");
+
+    if (!lista) return;
 
     const ricercaInput = document.getElementById("ricerca");
     const ricerca = ricercaInput ? ricercaInput.value.toLowerCase() : "";
@@ -160,17 +164,9 @@ function mostraInterventi() {
         const card = document.createElement("div");
         card.className = "card";
 
-        let fotoHtml = "";
-
-        if (intervento.foto && intervento.foto !== "") {
-            fotoHtml = `
-                <img 
-                    src="${intervento.foto}" 
-                    class="foto-card" 
-                    alt="Foto intervento"
-                >
-            `;
-        }
+        const fotoHtml = intervento.foto
+            ? `<img src="${intervento.foto}" class="foto-card" alt="Foto intervento">`
+            : "";
 
         card.innerHTML = `
             <p><strong>Cliente:</strong> ${intervento.nome || "-"}</p>
@@ -185,27 +181,11 @@ function mostraInterventi() {
             ${fotoHtml}
 
             <div class="azioni">
-
-                <button onclick="modificaIntervento(${intervento.id})">
-                    Modifica
-                </button>
-
-                <button onclick="stampaIntervento(${intervento.id})">
-                    Stampa
-                </button>
-
-                <button onclick="apriStoricoCliente('${intervento.nome}')">
-                    Storico
-                </button>
-
-                <button class="completa-btn" onclick="completaIntervento(${intervento.id})">
-                    Consegna
-                </button>
-
-                <button class="elimina-btn" onclick="eliminaIntervento(${intervento.id})">
-                    Elimina
-                </button>
-
+                <button onclick="modificaIntervento(${intervento.id})">Modifica</button>
+                <button onclick="stampaIntervento(${intervento.id})">Stampa</button>
+                <button onclick="apriStoricoCliente('${intervento.nome}')">Storico</button>
+                <button class="completa-btn" onclick="completaIntervento(${intervento.id})">Consegna</button>
+                <button class="elimina-btn" onclick="eliminaIntervento(${intervento.id})">Elimina</button>
             </div>
         `;
 
@@ -216,9 +196,7 @@ function mostraInterventi() {
 function modificaIntervento(id) {
     const intervento = interventi.find(item => item.id === id);
 
-    if (!intervento) {
-        return;
-    }
+    if (!intervento) return;
 
     document.getElementById("nome").value = intervento.nome || "";
     document.getElementById("telefono").value = intervento.telefono || "";
@@ -250,11 +228,7 @@ async function completaIntervento(id) {
 }
 
 async function eliminaIntervento(id) {
-    const conferma = confirm("Vuoi eliminare questo intervento?");
-
-    if (!conferma) {
-        return;
-    }
+    if (!confirm("Vuoi eliminare questo intervento?")) return;
 
     interventi = interventi.filter(intervento => intervento.id !== id);
 
@@ -272,8 +246,16 @@ function pulisciCampiIntervento() {
     document.getElementById("prezzo").value = "";
     document.getElementById("statoIntervento").value = "In attesa";
     document.getElementById("note").value = "";
-    document.getElementById("fotoIntervento").value = "";
+
+    const fotoInput = document.getElementById("fotoIntervento");
+    if (fotoInput) fotoInput.value = "";
+
+    interventoInModifica = null;
 }
+
+/* =========================
+   ORDINI
+========================= */
 
 async function salvaOrdine() {
     const nome = document.getElementById("ordineNome").value.trim();
@@ -314,7 +296,7 @@ async function salvaOrdine() {
         ordineInModifica = null;
 
     } else {
-        const nuovoOrdine = {
+        ordini.push({
             id: Date.now(),
             nome,
             telefono,
@@ -325,9 +307,7 @@ async function salvaOrdine() {
             acconto,
             stato,
             note
-        };
-
-        ordini.push(nuovoOrdine);
+        });
     }
 
     await salvaDati();
@@ -340,6 +320,8 @@ async function salvaOrdine() {
 
 function mostraOrdini() {
     const lista = document.getElementById("listaOrdini");
+
+    if (!lista) return;
 
     const ricercaInput = document.getElementById("ricercaOrdini");
     const ricerca = ricercaInput ? ricercaInput.value.toLowerCase() : "";
@@ -374,23 +356,10 @@ function mostraOrdini() {
             <p><strong>Note:</strong> ${ordine.note || "-"}</p>
 
             <div class="azioni">
-
-                <button onclick="modificaOrdine(${ordine.id})">
-                    Modifica
-                </button>
-
-                <button onclick="apriStoricoCliente('${ordine.nome}')">
-                    Storico
-                </button>
-
-                <button class="completa-btn" onclick="consegnaOrdine(${ordine.id})">
-                    Consegnato
-                </button>
-
-                <button class="elimina-btn" onclick="eliminaOrdine(${ordine.id})">
-                    Elimina
-                </button>
-
+                <button onclick="modificaOrdine(${ordine.id})">Modifica</button>
+                <button onclick="apriStoricoCliente('${ordine.nome}')">Storico</button>
+                <button class="completa-btn" onclick="consegnaOrdine(${ordine.id})">Consegnato</button>
+                <button class="elimina-btn" onclick="eliminaOrdine(${ordine.id})">Elimina</button>
             </div>
         `;
 
@@ -401,9 +370,7 @@ function mostraOrdini() {
 function modificaOrdine(id) {
     const ordine = ordini.find(item => item.id === id);
 
-    if (!ordine) {
-        return;
-    }
+    if (!ordine) return;
 
     document.getElementById("ordineNome").value = ordine.nome || "";
     document.getElementById("ordineTelefono").value = ordine.telefono || "";
@@ -436,11 +403,7 @@ async function consegnaOrdine(id) {
 }
 
 async function eliminaOrdine(id) {
-    const conferma = confirm("Vuoi eliminare questo ordine?");
-
-    if (!conferma) {
-        return;
-    }
+    if (!confirm("Vuoi eliminare questo ordine?")) return;
 
     ordini = ordini.filter(ordine => ordine.id !== id);
 
@@ -459,7 +422,13 @@ function pulisciCampiOrdine() {
     document.getElementById("ordineAcconto").value = "";
     document.getElementById("statoOrdine").value = "Da ordinare";
     document.getElementById("ordineNote").value = "";
+
+    ordineInModifica = null;
 }
+
+/* =========================
+   CREDITI CLIENTI
+========================= */
 
 async function salvaCredito() {
     const nome = document.getElementById("creditoNome").value.trim();
@@ -477,46 +446,31 @@ async function salvaCredito() {
         return;
     }
 
-    if (creditoInModifica) {
-        crediti = crediti.map(credito => {
-            if (credito.id === creditoInModifica) {
-                return {
-                    id: credito.id,
-                    nome,
-                    telefono,
-                    motivo,
-                    importo,
-                    acconto,
-                    data,
-                    scadenza,
-                    stato,
-                    note
-                };
-            }
+    const nuovoCredito = {
+        id: creditoInModifica || Date.now(),
+        nome,
+        telefono,
+        motivo,
+        importo,
+        acconto,
+        data,
+        scadenza,
+        stato,
+        note
+    };
 
-            return credito;
-        });
+    if (creditoInModifica) {
+        crediti = crediti.map(credito =>
+            credito.id === creditoInModifica ? nuovoCredito : credito
+        );
 
         creditoInModifica = null;
-
     } else {
-        const nuovoCredito = {
-            id: Date.now(),
-            nome,
-            telefono,
-            motivo,
-            importo,
-            acconto,
-            data,
-            scadenza,
-            stato,
-            note
-        };
-
         crediti.push(nuovoCredito);
     }
 
     await salvaDati();
+
     pulisciCampiCredito();
     mostraCrediti();
     aggiornaHome();
@@ -527,9 +481,7 @@ async function salvaCredito() {
 function mostraCrediti() {
     const lista = document.getElementById("listaCrediti");
 
-    if (!lista) {
-        return;
-    }
+    if (!lista) return;
 
     const ricercaInput = document.getElementById("ricercaCrediti");
     const ricerca = ricercaInput ? ricercaInput.value.toLowerCase() : "";
@@ -568,23 +520,10 @@ function mostraCrediti() {
             <p><strong>Note:</strong> ${credito.note || "-"}</p>
 
             <div class="azioni">
-
-                <button onclick="modificaCredito(${credito.id})">
-                    Modifica
-                </button>
-
-                <button onclick="apriStoricoCliente('${credito.nome}')">
-                    Storico
-                </button>
-
-                <button class="completa-btn" onclick="pagaCredito(${credito.id})">
-                    Segna Pagato
-                </button>
-
-                <button class="elimina-btn" onclick="eliminaCredito(${credito.id})">
-                    Elimina
-                </button>
-
+                <button onclick="modificaCredito(${credito.id})">Modifica</button>
+                <button onclick="apriStoricoCliente('${credito.nome}')">Storico</button>
+                <button class="completa-btn" onclick="pagaCredito(${credito.id})">Segna Pagato</button>
+                <button class="elimina-btn" onclick="eliminaCredito(${credito.id})">Elimina</button>
             </div>
         `;
 
@@ -595,9 +534,7 @@ function mostraCrediti() {
 function modificaCredito(id) {
     const credito = crediti.find(item => item.id === id);
 
-    if (!credito) {
-        return;
-    }
+    if (!credito) return;
 
     document.getElementById("creditoNome").value = credito.nome || "";
     document.getElementById("creditoTelefono").value = credito.telefono || "";
@@ -631,18 +568,13 @@ async function pagaCredito(id) {
 }
 
 async function eliminaCredito(id) {
-    const conferma = confirm("Vuoi eliminare questo credito?");
-
-    if (!conferma) {
-        return;
-    }
+    if (!confirm("Vuoi eliminare questo credito?")) return;
 
     crediti = crediti.filter(credito => credito.id !== id);
 
     await salvaDati();
-   pulisciCampiCredito();
-mostraCrediti();
-aggiornaHome();
+    mostraCrediti();
+    aggiornaHome();
 }
 
 function pulisciCampiCredito() {
@@ -655,109 +587,109 @@ function pulisciCampiCredito() {
     document.getElementById("creditoScadenza").value = "";
     document.getElementById("creditoStato").value = "Da incassare";
     document.getElementById("creditoNote").value = "";
+
+    creditoInModifica = null;
 }
+
+/* =========================
+   HOME
+========================= */
 
 function aggiornaHome() {
     const riepilogoInterventi = document.getElementById("riepilogoInterventi");
     const riepilogoOrdini = document.getElementById("riepilogoOrdini");
+    const riepilogoCrediti = document.getElementById("riepilogoCrediti");
 
-    const attiviInterventi = interventi.filter(intervento =>
-        intervento.stato !== "Consegnato" &&
-        intervento.stato !== "Annullato"
-    );
+    if (riepilogoInterventi) {
+        const attiviInterventi = interventi.filter(intervento =>
+            intervento.stato !== "Consegnato" &&
+            intervento.stato !== "Annullato"
+        );
 
-    riepilogoInterventi.innerHTML = "";
+        riepilogoInterventi.innerHTML = "";
 
-    if (attiviInterventi.length === 0) {
-        riepilogoInterventi.innerHTML = "<p>Nessuna assistenza attiva.</p>";
-    } else {
-        attiviInterventi.slice().reverse().forEach(intervento => {
-            riepilogoInterventi.innerHTML += `
-                <div class="card">
-                    <p><strong>${intervento.nome}</strong> - ${intervento.dispositivo}</p>
-                    <p>Stato: <span class="badge">${intervento.stato}</span></p>
-                </div>
-            `;
-        });
-const attiviCrediti = crediti.filter(credito =>
-    credito.stato !== "Pagato" &&
-    credito.stato !== "Annullato"
-);
+        if (attiviInterventi.length === 0) {
+            riepilogoInterventi.innerHTML = "<p>Nessuna assistenza attiva.</p>";
+        } else {
+            attiviInterventi.slice().reverse().forEach(intervento => {
+                riepilogoInterventi.innerHTML += `
+                    <div class="card">
+                        <p><strong>${intervento.nome}</strong> - ${intervento.dispositivo}</p>
+                        <p>Stato: <span class="badge">${intervento.stato}</span></p>
+                    </div>
+                `;
+            });
+        }
+    }
 
-let totaleCrediti = 0;
+    if (riepilogoOrdini) {
+        const attiviOrdini = ordini.filter(ordine =>
+            ordine.stato !== "Consegnato" &&
+            ordine.stato !== "Annullato"
+        );
 
-attiviCrediti.forEach(credito => {
-    const importo = parseFloat(credito.importo) || 0;
-    const acconto = parseFloat(credito.acconto) || 0;
-    totaleCrediti += importo - acconto;
-});
-const riepilogoCrediti = document.getElementById("riepilogoCrediti");
+        riepilogoOrdini.innerHTML = "";
 
-if (riepilogoCrediti) {
-    const attiviCrediti = crediti.filter(credito =>
-        credito.stato !== "Pagato" &&
-        credito.stato !== "Annullato"
-    );
+        if (attiviOrdini.length === 0) {
+            riepilogoOrdini.innerHTML = "<p>Nessun ordine attivo.</p>";
+        } else {
+            attiviOrdini.slice().reverse().forEach(ordine => {
+                riepilogoOrdini.innerHTML += `
+                    <div class="card">
+                        <p><strong>${ordine.nome}</strong> - ${ordine.prodotto}</p>
+                        <p>Stato: <span class="badge">${ordine.stato}</span></p>
+                    </div>
+                `;
+            });
+        }
+    }
 
-    let totaleCrediti = 0;
+    if (riepilogoCrediti) {
+        const attiviCrediti = crediti.filter(credito =>
+            credito.stato !== "Pagato" &&
+            credito.stato !== "Annullato"
+        );
 
-    riepilogoCrediti.innerHTML = "";
+        let totaleCrediti = 0;
 
-    if (attiviCrediti.length === 0) {
-        riepilogoCrediti.innerHTML = "<p>Nessun credito attivo.</p>";
-    } else {
-        attiviCrediti.slice().reverse().forEach(credito => {
-            const importo = parseFloat(credito.importo) || 0;
-            const acconto = parseFloat(credito.acconto) || 0;
-            const residuo = importo - acconto;
+        riepilogoCrediti.innerHTML = "";
 
-            totaleCrediti += residuo;
+        if (attiviCrediti.length === 0) {
+            riepilogoCrediti.innerHTML = "<p>Nessun credito attivo.</p>";
+        } else {
+            attiviCrediti.slice().reverse().forEach(credito => {
+                const importo = parseFloat(credito.importo) || 0;
+                const acconto = parseFloat(credito.acconto) || 0;
+                const residuo = importo - acconto;
+
+                totaleCrediti += residuo;
+
+                riepilogoCrediti.innerHTML += `
+                    <div class="card">
+                        <p><strong>${credito.nome}</strong> - ${credito.motivo}</p>
+                        <p>Residuo: <strong>€ ${residuo.toFixed(2)}</strong></p>
+                        <p>Stato: <span class="badge">${credito.stato}</span></p>
+                    </div>
+                `;
+            });
 
             riepilogoCrediti.innerHTML += `
                 <div class="card">
-                    <p><strong>${credito.nome}</strong> - ${credito.motivo}</p>
-                    <p>Residuo: <strong>€ ${residuo.toFixed(2)}</strong></p>
-                    <p>Stato: <span class="badge">${credito.stato}</span></p>
+                    <h3>Totale da incassare: € ${totaleCrediti.toFixed(2)}</h3>
                 </div>
             `;
-        });
-
-        riepilogoCrediti.innerHTML += `
-            <div class="card">
-                <h3>Totale da incassare: € ${totaleCrediti.toFixed(2)}</h3>
-            </div>
-        `;
+        }
     }
 }
-    }
 
-    const attiviOrdini = ordini.filter(ordine =>
-        ordine.stato !== "Consegnato" &&
-        ordine.stato !== "Annullato"
-    );
-
-    riepilogoOrdini.innerHTML = "";
-
-    if (attiviOrdini.length === 0) {
-        riepilogoOrdini.innerHTML = "<p>Nessun ordine attivo.</p>";
-    } else {
-        attiviOrdini.slice().reverse().forEach(ordine => {
-            riepilogoOrdini.innerHTML += `
-                <div class="card">
-                    <p><strong>${ordine.nome}</strong> - ${ordine.prodotto}</p>
-                    <p>Stato: <span class="badge">${ordine.stato}</span></p>
-                </div>
-            `;
-        });
-    }
-}
+/* =========================
+   STAMPA E STORICO
+========================= */
 
 function stampaIntervento(id) {
     const intervento = interventi.find(item => item.id === id);
 
-    if (!intervento) {
-        return;
-    }
+    if (!intervento) return;
 
     const contenuto = `
         <html>
@@ -830,13 +762,9 @@ function apriStoricoCliente(nomeCliente) {
 
     titolo.textContent = `Storico Cliente - ${nomeCliente}`;
 
-    const interventiCliente = interventi.filter(
-        intervento => intervento.nome === nomeCliente
-    );
-
-    const ordiniCliente = ordini.filter(
-        ordine => ordine.nome === nomeCliente
-    );
+    const interventiCliente = interventi.filter(intervento => intervento.nome === nomeCliente);
+    const ordiniCliente = ordini.filter(ordine => ordine.nome === nomeCliente);
+    const creditiCliente = crediti.filter(credito => credito.nome === nomeCliente);
 
     let html = "";
     let totale = 0;
@@ -881,9 +809,32 @@ function apriStoricoCliente(nomeCliente) {
         });
     }
 
+    html += "<h3>Crediti</h3>";
+
+    if (creditiCliente.length === 0) {
+        html += "<p>Nessun credito trovato.</p>";
+    } else {
+        creditiCliente.forEach(credito => {
+            const importo = parseFloat(credito.importo) || 0;
+            const acconto = parseFloat(credito.acconto) || 0;
+            const residuo = importo - acconto;
+
+            html += `
+                <div class="card">
+                    <p><strong>Data:</strong> ${credito.data || "-"}</p>
+                    <p><strong>Motivo:</strong> ${credito.motivo}</p>
+                    <p><strong>Importo:</strong> € ${importo.toFixed(2)}</p>
+                    <p><strong>Acconto:</strong> € ${acconto.toFixed(2)}</p>
+                    <p><strong>Residuo:</strong> € ${residuo.toFixed(2)}</p>
+                    <p><strong>Stato:</strong> ${credito.stato}</p>
+                </div>
+            `;
+        });
+    }
+
     html += `
         <div class="card">
-            <h3>Totale Speso: € ${totale.toFixed(2)}</h3>
+            <h3>Totale storico pagato/registrato: € ${totale.toFixed(2)}</h3>
         </div>
     `;
 
@@ -891,6 +842,10 @@ function apriStoricoCliente(nomeCliente) {
 
     apriPagina("storicoCliente");
 }
+
+/* =========================
+   BACKUP
+========================= */
 
 async function creaBackup() {
     try {
@@ -958,9 +913,7 @@ async function ripristinaBackup(file) {
         "ATTENZIONE: ripristinando questo backup, i dati attuali verranno sostituiti. Vuoi continuare?"
     );
 
-    if (!conferma) {
-        return;
-    }
+    if (!conferma) return;
 
     const risposta = await fetch("/api/ripristina-backup", {
         method: "POST",
@@ -986,9 +939,7 @@ async function eliminaBackup(file) {
         "Vuoi eliminare definitivamente questo backup? Questa operazione non può essere annullata."
     );
 
-    if (!conferma) {
-        return;
-    }
+    if (!conferma) return;
 
     const risposta = await fetch("/api/elimina-backup", {
         method: "POST",
@@ -1007,6 +958,10 @@ async function eliminaBackup(file) {
         alert(risultato.message || "Errore durante l'eliminazione del backup.");
     }
 }
+
+/* =========================
+   LOGIN / PASSWORD
+========================= */
 
 async function cambiaPassword() {
     const vecchiaPassword = document.getElementById("vecchiaPassword").value;
