@@ -640,8 +640,9 @@ async function eliminaCredito(id) {
     crediti = crediti.filter(credito => credito.id !== id);
 
     await salvaDati();
-    mostraCrediti();
-    aggiornaHome();
+   pulisciCampiCredito();
+mostraCrediti();
+aggiornaHome();
 }
 
 function pulisciCampiCredito() {
